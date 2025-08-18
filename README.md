@@ -4,7 +4,7 @@
 
 Update method log of the Logger according to the TODO comments
 
-```
+```ts
 //TODO
 //following emit should be performed only for matching specified level
 //config should contain property log_level
