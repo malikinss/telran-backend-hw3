@@ -5,7 +5,9 @@ import Logger from "./Logger.ts";
 const logger = new Logger();
 
 logger.addHandlerMessage((obj) =>
-	console.log(`[${obj.level.toUpperCase()}] ${obj.message}`)
+	console.log(
+		`[${obj.timestamp}] [${obj.level.toUpperCase()}] ${obj.message}`
+	)
 );
 
 logger.log("severe", "CRITICAL ERROR");

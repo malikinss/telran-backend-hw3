@@ -27,7 +27,11 @@ class Logger extends EventEmitter {
 	}
 
 	addHandlerMessage(
-		handler: (obj: { level: LogLevel; message: string }) => void
+		handler: (obj: {
+			level: LogLevel;
+			message: string;
+			timestamp: string;
+		}) => void
 	): void {
 		this.on("message", handler);
 	}
@@ -48,8 +52,18 @@ class Logger extends EventEmitter {
 
 	log(level: LogLevel, message: string): void {
 		if (this.shouldLog(level)) {
-			this.emit(level, message);
-			this.emit("message", { level, message });
+			const logEntry = {
+				level,
+				message,
+				timestamp: new Date().toISOString(),
+			};
+
+			const formattedMessage = `[${logEntry.level.toUpperCase()}] [${
+				logEntry.timestamp
+			}] ${message}`;
+
+			this.emit(level, formattedMessage);
+			this.emit("message", logEntry);
 		}
 	}
 }
