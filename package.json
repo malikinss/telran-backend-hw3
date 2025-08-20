@@ -1,0 +1,24 @@
+{
+	"name": "HW3",
+	"version": "1.0.0",
+	"description": "Home work 3 Event Emitter",
+	"license": "MIT",
+	"author": "",
+	"type": "module",
+	"main": "index.ts",
+	"scripts": {
+		"dev": "node --no-warnings --loader ts-node/esm index.ts"
+	},
+	"dependencies": {
+		"@types/config": "^3.3.5",
+		"config": "^4.0.0",
+		"lodash": "^4.17.21"
+	},
+	"devDependencies": {
+		"@types/lodash": "^4.17.20",
+		"@types/node": "^24.0.12",
+		"ts-node": "^10.9.2",
+		"tslib": "^2.8.1",
+		"typescript": "^5.8.3"
+	}
+}
