@@ -71,7 +71,7 @@ This Logger helps in monitoring application behavior, debugging, and logging imp
 
 Example console output with colors and symbols:
 
-```
+```sh
 [2025-08-20T16:30:00.000Z] 🔴 [SEVERE] CRITICAL ERROR
 [2025-08-20T16:30:01.000Z] 🟠 [WARN] Low disk space
 [2025-08-20T16:30:02.000Z] 🟡 [INFO] User logged in
