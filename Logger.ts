@@ -8,17 +8,36 @@ type LogLevel = "severe" | "warn" | "info" | "debug" | "trace";
 const CONFIG_PROP_NAME = "log_level";
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
 
+/**
+ * Custom Logger class that extends EventEmitter.
+ *
+ * Features:
+ * - Supports log levels: severe, warn, info, debug, trace
+ * - Configurable log level via `config`
+ * - Timestamped and color-coded console output
+ * - Level-specific handlers and global message handler
+ */
 class Logger extends EventEmitter {
 	private logLevel: LogLevel;
 
+	/**
+	 * Creates an instance of Logger.
+	 * Initializes the log level from configuration or defaults to "info".
+	 */
 	constructor() {
 		super();
-		// Initialize log level from config or default to "info"
 		this.logLevel =
 			(config.get<string>(CONFIG_PROP_NAME) as LogLevel) ||
 			DEFAULT_LOG_LEVEL;
 	}
 
+	/**
+	 * Adds a handler function for a specific log level.
+	 * The handler receives a formatted string with timestamp, level, and message.
+	 *
+	 * @param level - The log level to handle
+	 * @param handler - Callback function to handle messages of this level
+	 */
 	addHandlerLevel(
 		level: LogLevel,
 		handler: (message: string) => void
@@ -26,12 +45,26 @@ class Logger extends EventEmitter {
 		this.on(level, handler);
 	}
 
+	/**
+	 * Adds a global handler for all log messages.
+	 * The handler receives an object containing:
+	 * - `level`: log level
+	 * - `formattedMessage`: string with colored level, timestamp, and message
+	 *
+	 * @param handler - Callback function to handle all messages
+	 */
 	addHandlerMessage(
 		handler: (obj: { level: LogLevel; formattedMessage: string }) => void
 	): void {
 		this.on("message", handler);
 	}
 
+	/**
+	 * Determines if a message should be logged based on current log level.
+	 *
+	 * @param level - Log level of the message
+	 * @returns `true` if the message should be logged, `false` otherwise
+	 */
 	private shouldLog(level: LogLevel): boolean {
 		const levels: LogLevel[] = [
 			"trace",
@@ -46,6 +79,16 @@ class Logger extends EventEmitter {
 		return levelIndex >= currentLevelIndex;
 	}
 
+	/**
+	 * Logs a message at the specified log level.
+	 * - Checks if the message passes the configured log level
+	 * - Adds timestamp
+	 * - Formats message with colored level and symbols
+	 * - Emits to level-specific handlers and global message handler
+	 *
+	 * @param level - The log level of the message
+	 * @param message - The log message
+	 */
 	log(level: LogLevel, message: string): void {
 		if (this.shouldLog(level)) {
 			const logEntry = {
@@ -59,14 +102,21 @@ class Logger extends EventEmitter {
 
 			const formattedMessage = `${coloredTimestamp} ${coloredLevel} ${message}`;
 
-			// for addHandlerLevel - string
+			// Emit to handlers for specific log level
 			this.emit(level, formattedMessage);
 
-			// for addHandlerMessage - object
+			// Emit to global message handlers
 			this.emit("message", { ...logEntry, formattedMessage });
 		}
 	}
 
+	/**
+	 * Returns a color-coded and symbolized string for a given log level.
+	 * Uses ANSI escape codes for colored console output.
+	 *
+	 * @param level - The log level
+	 * @returns Formatted string with color, symbol, and uppercase level
+	 */
 	private getColoredLevel(level: LogLevel): string {
 		const symbols: Record<LogLevel, string> = {
 			severe: "🔴",
@@ -79,7 +129,7 @@ class Logger extends EventEmitter {
 		const colors: Record<LogLevel, string> = {
 			severe: "\x1b[31m", // red
 			warn: "\x1b[38;5;208m", // orange
-			info: "\x1b[93m", // yellow
+			info: "\x1b[93m", // bright yellow
 			debug: "\x1b[32m", // green
 			trace: "\x1b[34m", // blue
 		};
@@ -90,4 +140,7 @@ class Logger extends EventEmitter {
 	}
 }
 
+/**
+ * Exports the Logger class as the default export.
+ */
 export default Logger;
