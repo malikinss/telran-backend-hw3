@@ -4,11 +4,7 @@ import Logger from "./Logger.ts";
 
 const logger = new Logger();
 
-logger.addHandlerMessage((obj) =>
-	console.log(
-		`[${obj.timestamp}] [${obj.level.toUpperCase()}] ${obj.message}`
-	)
-);
+logger.addHandlerMessage((obj) => console.log(obj.formattedMessage));
 
 logger.log("severe", "CRITICAL ERROR");
 logger.log("warn", "Low disk space");

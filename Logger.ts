@@ -27,11 +27,7 @@ class Logger extends EventEmitter {
 	}
 
 	addHandlerMessage(
-		handler: (obj: {
-			level: LogLevel;
-			message: string;
-			timestamp: string;
-		}) => void
+		handler: (obj: { level: LogLevel; formattedMessage: string }) => void
 	): void {
 		this.on("message", handler);
 	}
@@ -58,13 +54,39 @@ class Logger extends EventEmitter {
 				timestamp: new Date().toISOString(),
 			};
 
-			const formattedMessage = `[${logEntry.level.toUpperCase()}] [${
-				logEntry.timestamp
-			}] ${message}`;
+			const coloredLevel = this.getColoredLevel(level);
+			const coloredTimestamp = `\x1b[36m[${logEntry.timestamp}]\x1b[0m`;
 
+			const formattedMessage = `${coloredTimestamp} ${coloredLevel} ${message}`;
+
+			// for addHandlerLevel - string
 			this.emit(level, formattedMessage);
-			this.emit("message", logEntry);
+
+			// for addHandlerMessage - object
+			this.emit("message", { ...logEntry, formattedMessage });
 		}
+	}
+
+	private getColoredLevel(level: LogLevel): string {
+		const symbols: Record<LogLevel, string> = {
+			severe: "🔴",
+			warn: "🟠",
+			info: "🟡",
+			debug: "🟢",
+			trace: "🔵",
+		};
+
+		const colors: Record<LogLevel, string> = {
+			severe: "\x1b[31m", // red
+			warn: "\x1b[38;5;208m", // orange
+			info: "\x1b[93m", // yellow
+			debug: "\x1b[32m", // green
+			trace: "\x1b[34m", // blue
+		};
+
+		return `${colors[level]}${
+			symbols[level]
+		} [${level.toUpperCase()}]\x1b[0m`;
 	}
 }
 
