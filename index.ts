@@ -1,6 +1,6 @@
 // index.ts
 
-import Logger from "./Logger.ts";
+import Logger, { LogLevel } from "./Logger.ts";
 
 const logger = new Logger();
 
@@ -8,8 +8,8 @@ const logger = new Logger();
 logger.addHandlerMessage((obj) => console.log(obj.formattedMessage));
 
 // Test logging at various levels
-logger.log("severe", "CRITICAL ERROR");
-logger.log("warn", "Low disk space");
-logger.log("info", "User logged in");
-logger.log("debug", "Debugging x=42");
-logger.log("trace", "Entered function foo()");
+logger.log(LogLevel.Severe, "CRITICAL ERROR");
+logger.log(LogLevel.Warn, "Low disk space");
+logger.log(LogLevel.Info, "User logged in");
+logger.log(LogLevel.Debug, "Debugging x=42");
+logger.log(LogLevel.Trace, "Entered function foo()");

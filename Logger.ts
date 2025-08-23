@@ -3,10 +3,16 @@
 import EventEmitter from "events";
 import config from "config";
 
-type LogLevel = "severe" | "warn" | "info" | "debug" | "trace";
+export enum LogLevel {
+	Severe = "severe",
+	Warn = "warn",
+	Info = "info",
+	Debug = "debug",
+	Trace = "trace",
+}
 
 const CONFIG_PROP_NAME = "log_level";
-const DEFAULT_LOG_LEVEL: LogLevel = "info";
+const DEFAULT_LOG_LEVEL: LogLevel = LogLevel.Info;
 
 /**
  * Custom Logger class that extends EventEmitter.
@@ -26,10 +32,56 @@ class Logger extends EventEmitter {
 	 */
 	constructor() {
 		super();
-		this.logLevel =
-			(config.get<string>(CONFIG_PROP_NAME) as LogLevel) ||
-			DEFAULT_LOG_LEVEL;
+		try {
+			const levelFromConfig = config.has(CONFIG_PROP_NAME)
+				? (config.get<string>(CONFIG_PROP_NAME) as LogLevel)
+				: DEFAULT_LOG_LEVEL;
+
+			if (
+				!Object.values(LogLevel).includes(levelFromConfig as LogLevel)
+			) {
+				console.warn(
+					`Invalid log level in config: "${levelFromConfig}", using default "${DEFAULT_LOG_LEVEL}"`
+				);
+				this.logLevel = DEFAULT_LOG_LEVEL;
+			} else {
+				this.logLevel = levelFromConfig as LogLevel;
+			}
+		} catch (err) {
+			console.error(
+				"Failed to read log_level from config, using default.",
+				err
+			);
+			this.logLevel = DEFAULT_LOG_LEVEL;
+		}
 	}
+
+	// Priority mapping for log levels
+	private static levelPriority: Record<LogLevel, number> = {
+		[LogLevel.Trace]: 0,
+		[LogLevel.Debug]: 1,
+		[LogLevel.Info]: 2,
+		[LogLevel.Warn]: 3,
+		[LogLevel.Severe]: 4,
+	};
+
+	// Map of log levels to their corresponding symbols
+	private static symbols: Record<LogLevel, string> = {
+		[LogLevel.Severe]: "🔴",
+		[LogLevel.Warn]: "🟠",
+		[LogLevel.Info]: "🟡",
+		[LogLevel.Debug]: "🟢",
+		[LogLevel.Trace]: "🔵",
+	};
+
+	// Map of log levels to their corresponding colors
+	private static colors: Record<LogLevel, string> = {
+		[LogLevel.Severe]: "\x1b[31m",
+		[LogLevel.Warn]: "\x1b[38;5;208m",
+		[LogLevel.Info]: "\x1b[93m",
+		[LogLevel.Debug]: "\x1b[32m",
+		[LogLevel.Trace]: "\x1b[34m",
+	};
 
 	/**
 	 * Adds a handler function for a specific log level.
@@ -37,6 +89,11 @@ class Logger extends EventEmitter {
 	 *
 	 * @param level - The log level to handle
 	 * @param handler - Callback function to handle messages of this level
+	 *
+	 * @example
+	 * logger.addHandlerLevel("info", (message) => {
+	 *   console.log(`Info handler: ${message}`);
+	 * });
 	 */
 	addHandlerLevel(
 		level: LogLevel,
@@ -52,6 +109,11 @@ class Logger extends EventEmitter {
 	 * - `formattedMessage`: string with colored level, timestamp, and message
 	 *
 	 * @param handler - Callback function to handle all messages
+	 *
+	 * @example
+	 * logger.addHandlerMessage(({ level, formattedMessage }) => {
+	 *   console.log(`Global handler [${level}]: ${formattedMessage}`);
+	 * });
 	 */
 	addHandlerMessage(
 		handler: (obj: { level: LogLevel; formattedMessage: string }) => void
@@ -60,23 +122,15 @@ class Logger extends EventEmitter {
 	}
 
 	/**
-	 * Determines if a message should be logged based on current log level.
+	 * Checks if a message should be logged based on its level.
 	 *
-	 * @param level - Log level of the message
-	 * @returns `true` if the message should be logged, `false` otherwise
+	 * @param level - The log level of the message
+	 * @returns True if the message should be logged, false otherwise
 	 */
 	private shouldLog(level: LogLevel): boolean {
-		const levels: LogLevel[] = [
-			"trace",
-			"debug",
-			"info",
-			"warn",
-			"severe",
-		];
-		const currentLevelIndex = levels.indexOf(this.logLevel);
-		const levelIndex = levels.indexOf(level);
-
-		return levelIndex >= currentLevelIndex;
+		return (
+			Logger.levelPriority[level] >= Logger.levelPriority[this.logLevel]
+		);
 	}
 
 	/**
@@ -118,25 +172,10 @@ class Logger extends EventEmitter {
 	 * @returns Formatted string with color, symbol, and uppercase level
 	 */
 	private getColoredLevel(level: LogLevel): string {
-		const symbols: Record<LogLevel, string> = {
-			severe: "🔴",
-			warn: "🟠",
-			info: "🟡",
-			debug: "🟢",
-			trace: "🔵",
-		};
+		const symbol = Logger.symbols[level];
+		const color = Logger.colors[level];
 
-		const colors: Record<LogLevel, string> = {
-			severe: "\x1b[31m", // red
-			warn: "\x1b[38;5;208m", // orange
-			info: "\x1b[93m", // bright yellow
-			debug: "\x1b[32m", // green
-			trace: "\x1b[34m", // blue
-		};
-
-		return `${colors[level]}${
-			symbols[level]
-		} [${level.toUpperCase()}]\x1b[0m`;
+		return `${color}${symbol}[${level.toUpperCase()}]\x1b[0m`;
 	}
 }
 
